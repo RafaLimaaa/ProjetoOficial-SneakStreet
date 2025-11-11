@@ -3,23 +3,23 @@
 import { useEffect } from "react"
 import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import ClientDashboard from "@/components/client-dashboard"
+import AdminDashboard from "@/components/admin-dashboard"
 
-export default function HomePage() {
+export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
 
-  // Se não autenticado, manda para /login
+  // Garantia extra no client (além do middleware)
   useEffect(() => {
-    if (status === "authenticated" && session) {
-      const role = (session.user as any).role
-      if (role === "ADMIN") {
-        router.replace("/admin")
-      }
-    }
-
     if (status === "unauthenticated") {
       router.replace("/login")
+    }
+
+    if (status === "authenticated" && session) {
+      const role = (session.user as any).role
+      if (role !== "ADMIN") {
+        router.replace("/")
+      }
     }
   }, [status, session, router])
 
@@ -32,17 +32,14 @@ export default function HomePage() {
   }
 
   const role = (session.user as any).role
-
-  // Se for admin e por algum motivo cair aqui, força /admin
-  if (role === "ADMIN") {
-    return <div>Redirecionando para área do admin...</div>
+  if (role !== "ADMIN") {
+    return <div>Redirecionando...</div>
   }
 
-  // CLIENTE autenticado -> dashboard do cliente
-  const userName = session.user?.name || "Cliente"
+  const userName = session.user?.name || "Admin"
 
   return (
-    <ClientDashboard
+    <AdminDashboard
       userName={userName}
       onLogout={() => signOut({ callbackUrl: "/login" })}
     />

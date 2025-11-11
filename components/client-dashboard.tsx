@@ -6,7 +6,6 @@ import SneakStreetLogo from "./sneakstreet-logo"
 import ProductGrid from "./product-grid"
 import CartPage from "./cart-page"
 import type { Product } from "@/types/product"
-import { DEFAULT_PRODUCTS } from "@/data/products"
 
 interface ClientDashboardProps {
   userName: string
@@ -20,40 +19,85 @@ export default function ClientDashboard({ userName, onLogout }: ClientDashboardP
   const [cart, setCart] = useState<Product[]>([])
   const [favorites, setFavorites] = useState<number[]>([])
   const [searchTerm, setSearchTerm] = useState("")
-  const [filteredProducts, setFilteredProducts] = useState(DEFAULT_PRODUCTS)
 
+  const [products, setProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Carregar carrinho e favoritos do localStorage
   useEffect(() => {
-    // Carregar carrinho e favoritos
     const savedCart = localStorage.getItem("cart")
     const savedFavorites = localStorage.getItem("favorites")
     if (savedCart) setCart(JSON.parse(savedCart))
     if (savedFavorites) setFavorites(JSON.parse(savedFavorites))
   }, [])
 
+  // Salvar carrinho
   useEffect(() => {
-    // Salvar carrinho
     localStorage.setItem("cart", JSON.stringify(cart))
   }, [cart])
 
+  // Salvar favoritos
   useEffect(() => {
-    // Salvar favoritos
     localStorage.setItem("favorites", JSON.stringify(favorites))
   }, [favorites])
 
+  // Buscar produtos da API
   useEffect(() => {
-    // Filtrar produtos
-    const filtered = DEFAULT_PRODUCTS.filter(
+    async function load() {
+      try {
+        setLoading(true)
+        setError(null)
+        const res = await fetch("/api/products", { cache: "no-store" })
+        if (!res.ok) throw new Error(`Falha ao carregar produtos: ${res.status}`)
+        const data = await res.json()
+
+        const normalized: Product[] = data.map((p: any) => ({
+          ...p,
+          price: typeof p.price === "string" ? parseFloat(p.price) : p.price,
+          originalPrice:
+            p.originalPrice == null
+              ? null
+              : typeof p.originalPrice === "string"
+                ? parseFloat(p.originalPrice)
+                : p.originalPrice,
+        }))
+
+        setProducts(normalized)
+        setFilteredProducts(normalized)
+      } catch (e: any) {
+        setError(e?.message || "Erro ao buscar produtos")
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  // Filtro de busca
+  useEffect(() => {
+    const term = searchTerm.trim().toLowerCase()
+    if (!term) {
+      setFilteredProducts(products)
+      return
+    }
+    const filtered = products.filter(
       (product) =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.brand.toLowerCase().includes(searchTerm.toLowerCase()),
+        product.name.toLowerCase().includes(term) ||
+        product.brand.toLowerCase().includes(term)
     )
     setFilteredProducts(filtered)
-  }, [searchTerm])
+  }, [searchTerm, products])
 
   const addToCart = (product: Product) => {
     const existingItem = cart.find((item) => item.id === product.id)
     if (existingItem) {
-      setCart(cart.map((item) => (item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item)))
+      setCart(
+        cart.map((item) =>
+          item.id === product.id ? { ...item, quantity: (item.quantity || 1) + 1 } : item
+        )
+      )
     } else {
       setCart([...cart, { ...product, quantity: 1 }])
     }
@@ -157,18 +201,33 @@ export default function ClientDashboard({ userName, onLogout }: ClientDashboardP
           <>
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-foreground mb-2">Bem-vindo, {userName}!</h2>
-              <p className="text-muted-foreground">Explore nossa coleção exclusiva de sneakers das melhores marcas</p>
+              <p className="text-muted-foreground">
+                Explore nossa coleção exclusiva de sneakers das melhores marcas
+              </p>
             </div>
-            <ProductGrid
-              products={filteredProducts}
-              favorites={favorites}
-              onAddToCart={addToCart}
-              onToggleFavorite={toggleFavorite}
-            />
+
+            {loading ? (
+              <p className="text-muted-foreground">Carregando produtos...</p>
+            ) : error ? (
+              <p className="text-destructive">Erro: {error}</p>
+            ) : (
+              <ProductGrid
+                products={filteredProducts}
+                favorites={favorites}
+                onAddToCart={addToCart}
+                onToggleFavorite={toggleFavorite}
+              />
+            )}
           </>
         )}
 
-        {view === "cart" && <CartPage cart={cart} onUpdateCart={setCart} onBackToShop={() => setView("home")} />}
+        {view === "cart" && (
+          <CartPage
+            cart={cart}
+            onUpdateCart={setCart}
+            onBackToShop={() => setView("home")}
+          />
+        )}
       </main>
     </div>
   )

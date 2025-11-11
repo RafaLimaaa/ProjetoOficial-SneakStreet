@@ -1,28 +1,57 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import SneakStreetLogo from "./sneakstreet-logo"
 import { Mail, Lock, User, LogIn } from "lucide-react"
 
-interface LoginPageProps {
-  onLogin: (role: "client" | "admin", name: string) => void
-}
+export default function LoginPage() {
+  const router = useRouter()
 
-export default function LoginPage({ onLogin }: LoginPageProps) {
   const [loginType, setLoginType] = useState<"client" | "admin" | null>(null)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [name, setName] = useState("")
+  const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (name.trim() && email.trim() && password.trim()) {
-      onLogin(loginType!, name)
-      setEmail("")
-      setPassword("")
-      setName("")
+
+    if (!loginType) {
+      setError("Selecione se você é Cliente ou Admin antes de continuar.")
+      return
+    }
+
+    if (!email || !password) {
+      setError("Preencha email e senha.")
+      return
+    }
+
+    setError("")
+    setLoading(true)
+
+    const res = await signIn("credentials", {
+      redirect: false,
+      email,
+      password,
+    })
+
+    setLoading(false)
+
+    if (!res || !res.ok) {
+      setError("Credenciais inválidas. Confira seu email e senha.")
+      return
+    }
+
+    // Login OK: decide rota visual.
+    // A autorização REAL é garantida pelo middleware + role no token.
+    if (loginType === "admin") {
+      router.push("/admin")
+    } else {
+      router.push("/")
     }
   }
 
@@ -31,6 +60,8 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setEmail("")
     setPassword("")
     setName("")
+    setError("")
+    setLoading(false)
   }
 
   return (
@@ -41,7 +72,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
       <div className="w-full max-w-4xl">
         {loginType === null ? (
-          // Tela inicial de escolha
+          // Escolha Cliente x Admin
           <div className="text-center mb-12">
             <div className="flex justify-center mb-8">
               <SneakStreetLogo size={120} />
@@ -99,6 +130,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             <p className="text-muted-foreground mb-8">Acesse sua conta para continuar</p>
 
             <form onSubmit={handleLogin} className="space-y-4">
+              {/* Nome (opcional, só visual) */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Nome</label>
                 <div className="relative">
@@ -109,11 +141,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome completo"
                     className="w-full pl-10 pr-4 py-2.5 bg-input border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-smooth"
-                    required
                   />
                 </div>
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Email</label>
                 <div className="relative">
@@ -129,6 +161,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
               </div>
 
+              {/* Senha */}
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">Senha</label>
                 <div className="relative">
@@ -144,18 +177,27 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 </div>
               </div>
 
+              {/* Erro */}
+              {error && (
+                <p className="text-sm text-red-500 font-medium">
+                  {error}
+                </p>
+              )}
+
+              {/* Botão */}
               <button
                 type="submit"
-                className="w-full mt-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold rounded-lg hover:shadow-lg hover:glow-red transition-smooth active:scale-95"
+                disabled={loading}
+                className="w-full mt-6 py-3 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground font-bold rounded-lg hover:shadow-lg hover:glow-red transition-smooth active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                Entrar Agora
+                {loading ? "Entrando..." : "Entrar Agora"}
               </button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-6">
               {loginType === "client"
-                ? "Use qualquer email e senha para demonstração"
-                : "Use credenciais admin para demonstração"}
+                ? "Use seu email e senha cadastrados para acessar como cliente."
+                : "Use suas credenciais de administrador para acessar o painel."}
             </p>
           </div>
         )}
