@@ -1,30 +1,41 @@
-# SneakStreet e-commerce site
+# SneakStreet — Loja de Tênis
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+O **SneakStreet** é um projeto acadêmico em desenvolvimento contínuo, criado como uma plataforma moderna de e-commerce voltada para tênis.  
+O objetivo é aplicar boas práticas de programação e evoluir o sistema ao longo das semanas, adicionando novas funcionalidades e melhorias.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/rafa-limas-projects/v0-sneak-street-e-commerce-site)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/k5tbDqt66xQ)
+---
 
-## Overview
+## Visão Geral
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+O projeto foi estruturado para ser escalável e de fácil manutenção, utilizando tecnologias modernas no front-end e back-end.  
+Todas as etapas e funcionalidades planejadas, em andamento e concluídas podem ser acompanhadas no Trello:
 
-## Deployment
+[Trello do Projeto — Funcionalidades SneakStreet](https://trello.com/b/SUlXe5Zm/loja-de-t%C3%AAnis-sneakstreet-funcionalidades)
 
-Your project is live at:
+O Trello é usado para demonstrar ao professor o progresso do projeto, permitindo acompanhar de forma transparente o que já foi desenvolvido e o que ainda será implementado.
 
-**[https://vercel.com/rafa-limas-projects/v0-sneak-street-e-commerce-site](https://vercel.com/rafa-limas-projects/v0-sneak-street-e-commerce-site)**
+---
 
-## Build your app
+## Tecnologias Utilizadas
 
-Continue building your app on:
+**Front-end**
+- Next.js 14 (App Router)
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn/ui
+- Lucide Icons
 
-**[https://v0.app/chat/k5tbDqt66xQ](https://v0.app/chat/k5tbDqt66xQ)**
+**Back-end**
+- NextAuth.js
+- Prisma ORM
+- MySQL
 
-## How It Works
+**Instalar dependências:**
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+-npm install
+
+**Rodar o servidor de desenvolvimento:**
+
+-npm run dev
+
